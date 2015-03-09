@@ -1,9 +1,6 @@
 package com.noahhuppert.newmaze.models;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by block7 on 3/6/15.
@@ -37,7 +34,12 @@ public class Maze {
     /* Actions */
     @Override
     public String toString(){
+        String blockChar = "\u2588";
         String out = "";
+
+        for(int i = 0; i <= width + 2; i++){
+            out += blockChar + " ";
+        }
 
         for(int h = 0; h <= height; h++){
             for(int w = 0; w <= width; w++){
@@ -46,6 +48,10 @@ public class Maze {
 
                 if(point.getPosition().getX() == 0){
                     out += "\n";
+                }
+
+                if(point.getPosition().getX() == 0){
+                    out += blockChar;
                 }
 
                 out += " ";
@@ -59,21 +65,108 @@ public class Maze {
                 } else {
                     out += "*";
                 }
+
+                if(point.getPosition().getX() == getWidth()){
+                    out += " " + blockChar;
+                }
             }
+        }
+
+        out += "\n";
+
+        for(int i = 0; i <= width + 2; i++){
+            out += blockChar + " ";
         }
 
         return out;
     }
 
+    public boolean vector2OnMaze(Vector2 vector2){
+        return vector2.getX() >= 0 && vector2.getX() <= getWidth() &&
+                vector2.getY() >= 0 && vector2.getY() <= getHeight();
+    }
+
+    public boolean vector2InCorner(Vector2 vector2){
+        return vector2.getX() == 0 || vector2.getX() == getWidth() ||
+               vector2.getY() == 0 || vector2.getY() == getHeight();
+    }
+
     public List<Vector2> getPointsNextTo(Vector2 nextTo){
-        Vector2 tUp = nextTo.add(Vector2.UP);
-        Vector2 tDown = nextTo.add(Vector2.DOWN);
-        Vector2 tRight = nextTo.add(Vector2.RIGHT);
-        Vector2 tLeft = nextTo.add(Vector2.LEFT);
+        List<Vector2> transformedPoints = new ArrayList<Vector2>();
+
+        transformedPoints.add(nextTo.add(Vector2.UP));
+        transformedPoints.add(nextTo.add(Vector2.RIGHT));
+        transformedPoints.add(nextTo.add(Vector2.DOWN));
+        transformedPoints.add(nextTo.add(Vector2.LEFT));
+
+        List<Vector2> validTransformedPoints = new ArrayList<Vector2>();
+
+        for(Vector2 vector2 : transformedPoints){
+            if(vector2OnMaze(vector2)){
+                validTransformedPoints.add(vector2);
+            }
+        }
+
+        return validTransformedPoints;
+    }
+
+    public List<Vector2> getEmptyPointsNextTo(Vector2 nextTo){
+        List<Vector2> transformedPoints = getPointsNextTo(nextTo);
+
+        List<Vector2> validTransformedPoints = new ArrayList<Vector2>();
+
+        for(Vector2 vector2 : transformedPoints){
+            if(vector2OnMaze(vector2) && getPoint(vector2).getEmpty()){
+                validTransformedPoints.add(vector2);
+            }
+        }
+
+        return validTransformedPoints;
+    }
+
+    public List<Vector2> getNonEmptyPointsNextTo(Vector2 nextTo){
+        List<Vector2> transformedPoints = getPointsNextTo(nextTo);
+
+        List<Vector2> validTransformedPoints = new ArrayList<Vector2>();
+
+        for(Vector2 vector2 : transformedPoints){
+            if(vector2OnMaze(vector2) && !getPoint(vector2).getEmpty()){
+                validTransformedPoints.add(vector2);
+            }
+        }
+
+        return validTransformedPoints;
     }
 
     public static void FillRandom(Maze maze){
+        Vector2 currentPos = maze.getStartPos();
+        List<Vector2> visited = new ArrayList<Vector2>();
 
+        while(true){
+            List<Vector2> pointsNextTo = maze.getNonEmptyPointsNextTo(currentPos);
+            List<Vector2> newPointsNextTo = new ArrayList<Vector2>();
+
+            for(Vector2 vector2 : pointsNextTo){
+                if(!visited.contains(vector2) && (!maze.vector2InCorner(vector2) || vector2.equals(maze.getStartPos()))){
+                    newPointsNextTo.add(vector2);
+                }
+            }
+
+            if(newPointsNextTo.size() == 0){
+                System.out.println(currentPos);
+                break;
+            } else{
+                Vector2 goingTo = newPointsNextTo.get(new Random().nextInt(newPointsNextTo.size()));
+
+                if(goingTo.equals(maze.getEndPos())){
+                    break;
+                }
+
+                maze.getPoint(goingTo).setEmpty(true);
+                visited.add(currentPos);
+                currentPos = goingTo;
+            }
+        }
     }
 
     /* Getters */
@@ -95,6 +188,10 @@ public class Maze {
 
     public Vector2 getEndPos() {
         return endPos;
+    }
+
+    public MazePoint getPoint(Vector2 vector2){
+        return getGrid().get(vector2);
     }
 
     /* Setters */

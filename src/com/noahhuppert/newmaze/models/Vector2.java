@@ -33,7 +33,7 @@ public class Vector2 {
 
     @Override
     public String toString(){
-        return "[" + getX() + ", " + getY() + "]";
+        return "(" + getX() + ", " + getY() + ")";
     }
 
     @Override
