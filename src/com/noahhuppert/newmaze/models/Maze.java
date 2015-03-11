@@ -7,6 +7,7 @@ import java.util.*;
  */
 public class Maze {
     private Map<Vector2, MazePoint> grid;
+    private List<Vector2> specialPrintCoords;
     private final int width;
     private final int height;
     private final Vector2 startPos;
@@ -18,6 +19,8 @@ public class Maze {
 
         startPos = new Vector2(0, 0);
         endPos = new Vector2(width, height);
+
+        specialPrintCoords = new ArrayList<Vector2>();
 
         grid = new HashMap<Vector2, MazePoint>();
 
@@ -56,7 +59,9 @@ public class Maze {
 
                 out += " ";
 
-                if(point.getEmpty()) {
+                if(getSpecialPrintCoords().contains(point.getPosition())){
+                    out += "\u2022";
+                } else if(point.getEmpty()) {
                     out += " ";
                 } else if(point.getPosition().equals(getStartPos())){
                     out += "S";
@@ -87,8 +92,30 @@ public class Maze {
     }
 
     public boolean vector2InCorner(Vector2 vector2){
-        return vector2.getX() == 0 || vector2.getX() == getWidth() ||
-               vector2.getY() == 0 || vector2.getY() == getHeight();
+        return (vector2.getX() == 0 || vector2.getX() == getWidth()) &&
+                (vector2.getY() == 0 || vector2.getY() == getHeight());
+    }
+
+    public Vector2 randomPoint(){
+        return new Vector2(new Random().nextInt(getWidth()), new Random().nextInt(getHeight()));
+    }
+
+    public Vector2 randomEmptyPoint(){
+        while(true){
+            Vector2 point = randomPoint();
+            if(getPoint(point).getEmpty()){
+                return point;
+            }
+        }
+    }
+
+    public Vector2 randomNonEmptyPoint(){
+        while(true){
+            Vector2 point = randomPoint();
+            if(!getPoint(point).getEmpty()){
+                return point;
+            }
+        }
     }
 
     public List<Vector2> getPointsNextTo(Vector2 nextTo){
@@ -138,35 +165,55 @@ public class Maze {
         return validTransformedPoints;
     }
 
-    public static void FillRandom(Maze maze){
-        Vector2 currentPos = maze.getStartPos();
+    public void tunnle(Vector2 tunnleStartPos, int distance){
+        Vector2 currentPos = tunnleStartPos;
         List<Vector2> visited = new ArrayList<Vector2>();
 
-        while(true){
-            List<Vector2> pointsNextTo = maze.getNonEmptyPointsNextTo(currentPos);
+        int tunnleDistance = 0;
+
+        while((tunnleDistance < distance) || distance == -1){
+            List<Vector2> pointsNextTo = getNonEmptyPointsNextTo(currentPos);
             List<Vector2> newPointsNextTo = new ArrayList<Vector2>();
 
             for(Vector2 vector2 : pointsNextTo){
-                if(!visited.contains(vector2) && (!maze.vector2InCorner(vector2) || vector2.equals(maze.getStartPos()))){
+                if(!visited.contains(vector2) && (!vector2InCorner(vector2) || vector2.equals(getStartPos()))){
                     newPointsNextTo.add(vector2);
                 }
             }
 
             if(newPointsNextTo.size() == 0){
-                System.out.println(currentPos);
+                //getSpecialPrintCoords().add(currentPos);
                 break;
             } else{
                 Vector2 goingTo = newPointsNextTo.get(new Random().nextInt(newPointsNextTo.size()));
 
-                if(goingTo.equals(maze.getEndPos())){
+                if(goingTo.equals(getEndPos())){
                     break;
                 }
 
-                maze.getPoint(goingTo).setEmpty(true);
+                getPoint(goingTo).setEmpty(true);
                 visited.add(currentPos);
                 currentPos = goingTo;
             }
+
+            tunnleDistance++;
         }
+    }
+
+    public void tunnleRandom(int min, int max){
+        Vector2 tunnleStart = randomNonEmptyPoint();
+        int tunnleLength = new Random().nextInt((max - min) + 1) + min;
+
+        tunnle(tunnleStart, tunnleLength);
+    }
+
+    public static void FillRandom(Maze maze){
+        maze.tunnle(maze.getStartPos(), -1);
+        maze.tunnle(maze.getEndPos(), -1);
+
+        maze.tunnleRandom(3, 7);
+
+        maze.tunnle(maze.randomEmptyPoint(), 4);
     }
 
     /* Getters */
@@ -190,6 +237,10 @@ public class Maze {
         return endPos;
     }
 
+    public List<Vector2> getSpecialPrintCoords() {
+        return specialPrintCoords;
+    }
+
     public MazePoint getPoint(Vector2 vector2){
         return getGrid().get(vector2);
     }
@@ -197,5 +248,9 @@ public class Maze {
     /* Setters */
     public void setGrid(Map<Vector2, MazePoint> grid) {
         this.grid = grid;
+    }
+
+    public void setSpecialPrintCoords(List<Vector2> specialPrintCoords) {
+        this.specialPrintCoords = specialPrintCoords;
     }
 }
