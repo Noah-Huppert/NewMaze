@@ -208,12 +208,40 @@ public class Maze {
     }
 
     public static void FillRandom(Maze maze){
-        maze.tunnle(maze.getStartPos(), -1);
-        maze.tunnle(maze.getEndPos(), -1);
+        Vector2 currentPos = maze.getStartPos();
+        List<Vector2> visited = new ArrayList<Vector2>();
 
-        maze.tunnleRandom(3, 7);
+        while(true){
+            List<Vector2> pointsNextTo = maze.getNonEmptyPointsNextTo(currentPos);
+            List<Vector2> newPointsNextTo = new ArrayList<Vector2>();
 
-        maze.tunnle(maze.randomEmptyPoint(), 4);
+            for(Vector2 vector2 : pointsNextTo){
+                if(!visited.contains(vector2) && (vector2.equals(maze.getStartPos()) || !maze.vector2InCorner(vector2))){
+                    newPointsNextTo.add(vector2);
+                }
+            }
+
+            System.out.println(newPointsNextTo);
+
+            if(newPointsNextTo.isEmpty() && visited.isEmpty()){
+                break;
+            } else if(newPointsNextTo.size() == 0){
+                maze.getPoint(visited.get(visited.size() - 1)).setEmpty(false);
+
+                visited.remove(visited.size() - 1);
+                currentPos = visited.get(visited.size() - 1);
+            } else {
+                long seed = System.nanoTime();
+                Collections.shuffle(newPointsNextTo, new Random(seed));
+
+                Vector2 goingTo = newPointsNextTo.get(0);
+
+                maze.getPoint(goingTo).setEmpty(true);
+
+                visited.add(goingTo);
+                currentPos = goingTo;
+            }
+        }
     }
 
     /* Getters */

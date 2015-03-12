@@ -11,7 +11,7 @@ public class MazeSolver {
         Vector2 currentPos = maze.getStartPos();
         List<Vector2> visited = new ArrayList<Vector2>();
 
-        List<MazePointNode> solution = new ArrayList<MazePointNode>();
+        List<Vector2> solution = new ArrayList<Vector2>();
 
         while(true){
             List<Vector2> pointsNextTo = maze.getEmptyPointsNextTo(currentPos);
@@ -24,15 +24,23 @@ public class MazeSolver {
             }
 
             if(newPointsNextTo.size() == 0){
-                MazePointNode lastNode = null;
+                if(solution.isEmpty()){
+                    System.out.println("No Solution");
+                    break;
+                } if(maze.getNonEmptyPointsNextTo(currentPos).contains(maze.getEndPos())){
+                    System.out.println("Found Solution");
+                    break;
+                } else {
+                    visited.add(solution.get(solution.size() - 1));
 
-                if(solution.size() != 0){
-                    lastNode = solution.get(solution.size() - 1);
+                    solution.remove(solution.size() - 1);
+
+                    if(solution.isEmpty()){
+                        continue;
+                    }
+
+                    currentPos = solution.get(solution.size() - 1);
                 }
-
-                //TODO Trace back
-
-                break;
             } else{
                 Vector2 goingTo = newPointsNextTo.get(0);
 
@@ -40,30 +48,15 @@ public class MazeSolver {
                     goingTo = maze.getEndPos();
                 }
 
-                System.out.println(goingTo);
-
-                if(goingTo.equals(maze.getEndPos())){
-                    System.out.println(1);
-                    break;
-                }
-
-                maze.getPoint(goingTo).setEmpty(true);
                 visited.add(currentPos);
 
-                if(solution.size() == 0){
-                    solution.add(new MazePointNode(goingTo, null));
-                } else {
-                    Vector2 parent = solution.get(solution.size() - 1).getPointPosition();
-                    solution.add(new MazePointNode(goingTo, parent));
-                }
+                solution.add(goingTo);
 
                 currentPos = goingTo;
             }
         }
 
-        for(MazePointNode node : solution){
-            maze.getSpecialPrintCoords().add(node.getPointPosition());
-        }
+        maze.setSpecialPrintCoords(solution);
 
         return null;
     }
