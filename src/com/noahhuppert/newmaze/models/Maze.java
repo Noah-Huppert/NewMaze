@@ -1,5 +1,7 @@
 package com.noahhuppert.newmaze.models;
 
+import com.noahhuppert.newmaze.models.MazeTraversers.MazeGenerator;
+
 import java.util.*;
 
 /**
@@ -208,7 +210,18 @@ public class Maze {
     }
 
     public static void FillRandom(Maze maze){
-        Vector2 currentPos = maze.getStartPos();
+        new MazeGenerator(maze).traverse(maze.getStartPos(), maze.getEndPos());
+
+        maze.tunnleRandom(3, 7);
+
+        /*maze.tunnle(maze.getStartPos(), -1);
+        maze.tunnle(maze.getEndPos(), -1);
+
+        maze.tunnleRandom(3, 7);
+
+        maze.tunnle(maze.randomEmptyPoint(), 4);*/
+
+        /*Vector2 currentPos = maze.getStartPos();
         List<Vector2> visited = new ArrayList<Vector2>();
 
         while(true){
@@ -241,7 +254,7 @@ public class Maze {
                 visited.add(goingTo);
                 currentPos = goingTo;
             }
-        }
+        }*/
     }
 
     /* Getters */
