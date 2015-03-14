@@ -16,6 +16,13 @@ public class Maze {
     private final Vector2 endPos;
 
     public Maze(int width, int height){
+        width -= 1;
+        height -= 1;
+
+        if(width < 2 || height < 2){
+            throw new RuntimeException("Width and Height of the maze must be 3 or larger");
+        }
+
         this.width = width;
         this.height = height;
 
@@ -39,7 +46,7 @@ public class Maze {
     /* Actions */
     @Override
     public String toString(){
-        String blockChar = "\u2588";
+        String blockChar = "\033[1mO\033[0m";//"\u2588";
         String out = "";
 
         for(int i = 0; i <= width + 2; i++){
@@ -61,16 +68,16 @@ public class Maze {
 
                 out += " ";
 
-                if(getSpecialPrintCoords().contains(point.getPosition())){
-                    out += "\u2022";
+                if(point.getPosition().equals(getStartPos())){
+                    out += "\033[1mS\033[0m";
+                } else if(point.getPosition().equals(getEndPos())) {
+                    out += "\033[1mE\033[0m";
+                } else if(getSpecialPrintCoords().contains(point.getPosition())){
+                    out += "\033[31m\u2022\033[0m";
                 } else if(point.getEmpty()) {
                     out += " ";
-                } else if(point.getPosition().equals(getStartPos())){
-                    out += "S";
-                } else if(point.getPosition().equals(getEndPos())) {
-                    out += "E";
                 } else {
-                    out += "*";
+                    out += "\033[1m*\033[0m";
                 }
 
                 if(point.getPosition().getX() == getWidth()){
@@ -212,7 +219,9 @@ public class Maze {
     public static void FillRandom(Maze maze){
         new MazeGenerator(maze).traverse(maze.getStartPos(), maze.getEndPos());
 
-        maze.tunnleRandom(3, 7);
+        for(int i = 0; i < maze.getWidth() / 2; i++){
+            maze.tunnleRandom(3, 7);
+        }
 
         /*maze.tunnle(maze.getStartPos(), -1);
         maze.tunnle(maze.getEndPos(), -1);
